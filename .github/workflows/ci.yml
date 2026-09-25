@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r backend/requirements-dev.txt
+      - run: python -m pytest backend
+
+  frontend:
+    name: Frontend type-check, lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+
+  docker:
+    name: Docker image smoke test
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t fleetroute .
+      - name: Start the container and plan the demo
+        run: |
+          docker run -d -p 8000:8000 --name fleetroute fleetroute
+          for i in $(seq 1 30); do curl -fs http://localhost:8000/api/health && break; sleep 1; done
+          curl -fs http://localhost:8000/ | grep -q '<title>FleetRoute</title>'
+          curl -fs http://localhost:8000/api/demo \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); d.update(mode="economic", return_to_depot=True, allow_split=False); print(json.dumps(d))' \
+            | curl -fs -X POST http://localhost:8000/api/plan -H 'Content-Type: application/json' -d @- \
+            | python3 -c 'import json,sys; r=json.load(sys.stdin); k=r["kpis"]; print(k); assert k["orders_delivered"] == k["orders_total"] and not r["schedule"]["late"]'
+      - if: failure()
+        run: docker logs fleetroute
