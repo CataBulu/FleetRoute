@@ -215,6 +215,10 @@ run.bat             Build once and serve on one port
   impact of driving-time rules on a plan.
 - Weekend and holiday driving bans for trucks over 7.5 t are not modelled.
 
+## License
+
+Released under the [MIT License](LICENSE).
+
 ---
 
 Built by [Catalin](https://github.com/CataBulu). Map data ©
