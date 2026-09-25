@@ -1,0 +1,8 @@
+# Render Blueprint: in the Render dashboard choose New > Blueprint and select this repository.
+services:
+  - type: web
+    name: fleetroute
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
