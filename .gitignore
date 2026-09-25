@@ -1,31 +1,27 @@
-# Secrets & API keys — NEVER commit
+# Secrets
 .env
 .env.local
-.streamlit/secrets.toml
 
 # Python
 __pycache__/
 *.pyc
-*.pyo
 .venv/
 venv/
+.pytest_cache/
+
+# Frontend
+node_modules/
+frontend/dist/
+*.local
+
+# Logs
+*.log
 
 # OS / IDE
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-# App-specific
-.osrm_cache.json
-stdout.log
-stderr.log
-streamlit_*.log
-.pytest_cache/
-
-# Test output
-tests/screenshots/
-tests/demo_screenshots/
 
 # Local tool settings
 .claude/

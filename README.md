@@ -1,165 +1,221 @@
-# FleetRoute Optimizer
+# FleetRoute
 
-FleetRoute plans delivery routes for a fleet of vehicles. You give it a depot, a list
-of trucks and a list of orders, and it works out which vehicle carries which order and
-in what sequence, while staying inside vehicle capacity, delivery deadlines and the
-EU/Romanian rules on driver working time. It runs in the browser as a Streamlit app and
-uses Google OR-Tools for the routing.
+**A delivery route planner for truck fleets.** You enter a depot, your trucks and a list of
+pickup-and-delivery orders. FleetRoute decides which truck carries which load, in what
+order, and when. It keeps to truck capacity, delivery deadlines and EU driving-time rules.
 
-The road network covers Romanian cities. Distances and travel times come from a
-precomputed road graph that ships with the project, so the optimization runs on your own
-machine without calling any external service.
+The optimisation uses Google OR-Tools behind a Python / Starlette API. The interface is
+React + TypeScript with an interactive Leaflet map. The road network of 59 Romanian cities
+ships with the project, so planning runs entirely offline. Only the map background comes
+from OpenStreetMap.
 
-## What you need before you start
+![FleetRoute overview: KPIs and the planned routes on the map](docs/screenshots/overview.png)
 
-The only thing you install by hand is Python. Everything the app depends on is pulled in
-later with a single pip command.
+## Highlights
 
-- **Python 3.11**, 64-bit. Newer 3.x versions usually work too, but the app was built and
-  tested on 3.11.
-- **An internet connection** the first time you install (pip downloads the packages) and
-  while you use the app (the map background tiles are served by OpenStreetMap). The route
-  calculation itself works offline.
-- **Windows** if you want the `run.bat` launcher. On Linux or macOS you start the app with
-  one command instead, shown further down.
+- **Vehicle routing with real constraints.** Pickup-and-delivery pairs on the same truck,
+  capacity per vehicle, delivery deadlines, earliest pickup times and priority orders.
+  All of it is modelled with the OR-Tools routing solver, with a greedy fallback.
+- **Three planning goals.** Shortest distance, shortest driving time, or a weighted balance
+  of both, plus a side-by-side comparison of four first-solution strategies.
+- **Driver-hours compliance.** Every route is replayed against EU Regulation 561/2006:
+  45-minute breaks, reduced and regular daily rests, weekly rests, the 56 h / 90 h
+  weekly limits, and two-driver crews. Road segments are also checked against Romanian
+  truck speed limits.
+- **Load splitting.** Orders heavier than the biggest truck are split across several
+  vehicles.
+- **Route playback.** Trucks move across the map on their planned schedule, stopping for
+  loading and unloading.
+- **Operational dashboards.** Journey timeline, Gantt-style schedule, driver workload,
+  cost breakdown, CO₂ footprint, alerts and customer notifications.
+- **Exports.** Excel and PDF reports, plus JSON import and export of fleets, orders and
+  whole scenarios.
 
-There is no database to set up, no account to register and no API key to paste in.
+## Screenshots
 
-### Installing Python (skip if you already have 3.11)
+| Route playback | Journey timeline |
+|---|---|
+| ![Trucks moving along their routes](docs/screenshots/playback.png) | ![Step-by-step journey per truck](docs/screenshots/journey.png) |
 
-1. Download Python 3.11 from <https://www.python.org/downloads/>.
-2. Run the installer. On the very first screen, tick **Add python.exe to PATH** before you
-   click Install. This step is easy to miss and the terminal will not find Python without
-   it.
-3. When it finishes, open a new terminal and check it:
+| EU 561/2006 routing table | Schedule chart |
+|---|---|
+| ![Routing table with breaks, rests and deadlines](docs/screenshots/routing-table.png) | ![Gantt-style schedule per truck](docs/screenshots/schedule-chart.png) |
 
-   ```
-   python --version
-   ```
+| Cost breakdown | Driver workload |
+|---|---|
+| ![Fuel, driver pay and vehicle wear](docs/screenshots/costs.png) | ![Driving hours against the EU allowance](docs/screenshots/workload.png) |
 
-   You should see `Python 3.11.x`.
+## Tech stack
 
-## Installing the app
+| Layer | Technologies |
+|-------|--------------|
+| Frontend | React 19, TypeScript, Vite, Leaflet / react-leaflet, hand-written SVG charts |
+| Backend | Python 3.11+, Starlette, Uvicorn |
+| Optimisation | Google OR-Tools (constraint solver), NetworkX (Dijkstra shortest paths) |
+| Reports | xlsxwriter, fpdf2 |
+| Quality | pytest (47 tests), TypeScript strict type-checking, oxlint |
 
-Open a terminal inside the FleetRoute folder. On Windows, hold Shift, right-click an empty
-spot in the folder and choose *Open in Terminal* (or *Open PowerShell window here*).
+## Architecture
 
-Create a virtual environment. This keeps FleetRoute's packages in their own folder so they
-do not mix with anything else on your computer:
-
+```mermaid
+flowchart LR
+    UI["React + TypeScript<br/>(Vite)"] -- "JSON over /api" --> API["Starlette API<br/>validation"]
+    API --> PLAN["planning.py<br/>split loads, expand fleet"]
+    PLAN --> SOLVER["solver.py<br/>OR-Tools model"]
+    SOLVER --> GRAPH["graph.py<br/>road network + Dijkstra"]
+    API --> RULES["compliance.py<br/>EU 561/2006 replay"]
+    API --> ANALYTICS["analytics.py<br/>KPIs, timeline, CO₂"]
+    API --> EXPORTS["exports.py<br/>Excel / PDF"]
+    UI --> MAP["Leaflet map<br/>OpenStreetMap tiles"]
 ```
+
+- The **solver** builds a pickup-and-delivery model: a capacity dimension, and a time
+  dimension with loading time and waiting allowed. Deadlines and earliest-pickup windows
+  are time-window constraints. Orders sit in drop penalties, weighted up for priority
+  orders.
+- The **compliance engine** is independent of the solver. It walks each planned route
+  segment by segment and inserts breaks and rests where the regulation requires them. It
+  then reports slack against each deadline, late deliveries and limit violations.
+- Solver calls run in a worker thread (`run_in_threadpool`), so the API stays responsive
+  during longer optimisations.
+- In production, Starlette serves the built frontend and the API from a single port.
+
+## Getting started
+
+Requirements: **Python 3.11+** and **Node.js 20.19+**.
+
+### Windows
+
+| Script | What it does |
+|--------|--------------|
+| `dev.bat` | Starts the API (auto-reload) and the Vite dev server in two windows, then opens the app |
+| `run.bat` | Builds the interface once and serves everything at http://localhost:8000 |
+
+Both scripts create the Python environment and install the packages on first run.
+
+### macOS / Linux
+
+```bash
+./dev.sh
+```
+
+### Manual setup
+
+```bash
 python -m venv .venv
 ```
 
-Activate it:
-
-```
-.venv\Scripts\activate
+```bash
+.venv/bin/pip install -r backend/requirements-dev.txt
 ```
 
-On Linux or macOS run `source .venv/bin/activate` instead. When it is active the prompt
-shows `(.venv)` at the start of the line.
-
-Install the dependencies:
-
-```
-pip install -r requirements.txt
+```bash
+npm --prefix frontend install
 ```
 
-This reads `requirements.txt` and downloads everything the app uses. The first run takes a
-couple of minutes, mostly because OR-Tools is a large download.
+Then run the API and the frontend in two terminals:
 
-### What gets installed and why
-
-| Package | What it does in the app |
-|---------|-------------------------|
-| streamlit | Runs the whole interface in the browser |
-| ortools | Google's solver that computes the routes |
-| networkx | Builds the road network graph and finds shortest paths between cities |
-| folium, streamlit-folium | The interactive 2D maps with depots, stops and routes |
-| plotly | The dashboard charts for cost, fuel, emissions and driver workload |
-| pandas | Holds the route and results tables |
-| xlsxwriter | Writes the Excel export |
-| fpdf2 | Writes the PDF report |
-| python-dotenv | Optional. Loads a `.env` file if you have one; not needed for normal use |
-
-The 3D map view uses pydeck, which Streamlit installs on its own, so it is not listed
-separately above.
-
-## Running the app
-
-### Windows, with the launcher
-
-Double-click `run.bat`, or run it from the terminal:
-
-```
-run.bat
+```bash
+.venv/bin/python -m uvicorn fleetroute.app:app --app-dir backend --reload
 ```
 
-It starts the server and opens your browser at <http://localhost:8501> as soon as the app
-is ready. Keep the terminal window open while you work; close it or press Ctrl+C to stop
-the app.
-
-### Any platform, direct command
-
-With the virtual environment active:
-
-```
-streamlit run main.py
+```bash
+npm --prefix frontend run dev
 ```
 
-Then open <http://localhost:8501> if the browser does not open by itself.
+Open http://localhost:5173 and click **Try the demo data**, then **Generate routes**.
 
-## A short walkthrough
+On Windows, use `.venv\Scripts\` instead of `.venv/bin/`.
 
-1. **Pick a depot.** In the sidebar, choose the city the vehicles start from.
-2. **Add vehicles.** Give each one a name, a capacity in kilograms and a fuel consumption.
-   You can add as many as you need and they do not have to be the same.
-3. **Add orders.** Each order has a pickup city, a delivery city, a quantity and a
-   deadline.
-4. **Press Generate routes.** The app assigns orders to vehicles, sequences the stops and
-   draws the result on the map.
-5. **Read the results.** The route table lists every leg with its distance and time and
-   flags any driver-hours problems. The dashboard tab has the cost, fuel and emissions
-   charts, and you can export the plan to Excel or PDF.
+## Tests
 
-### Trying it with the sample data
+```bash
+.venv/bin/python -m pytest backend
+```
 
-If you just want to see it run without typing anything in:
+```bash
+npm --prefix frontend run typecheck
+```
 
-1. In the sidebar, use *Upload fleet config* and pick `demo_fleet.json`.
-2. Use *Upload orders config* and pick `demo_orders.json`.
-3. Press **Generate routes**.
+```bash
+npm --prefix frontend run lint
+```
 
-## If something does not work
+The backend suite has 47 tests:
+- solver behaviour on a small fixed network: deadlines, waiting for pickup windows,
+  priorities, open routing, fallback
+- the EU rules engine
+- input normalisation and load splitting
+- the HTTP API end to end on the real road network
 
-- **`python` is not recognised.** Python is not on PATH. Reinstall it with *Add python.exe
-  to PATH* ticked, then open a fresh terminal.
-- **PowerShell refuses to run the activate script** ("running scripts is disabled on this
-  system"). Run this once in the same window and then activate again:
+## API
 
-  ```
-  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-  ```
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/cities` | Selectable cities with coordinates |
+| GET | `/api/demo` | Sample depot, fleet and orders |
+| POST | `/api/plan` | Solve a plan. Returns routes, map lines, KPIs, schedule, timeline and alerts |
+| POST | `/api/compare` | Solve with each first-solution strategy and compare the results |
+| POST | `/api/export/{xlsx,pdf}` | Report for a set of planned routes |
 
-- **Port 8501 is already in use.** An earlier instance is still running. The Windows
-  launcher stops it for you; otherwise close the old terminal, or start on another port
-  with `streamlit run main.py --server.port 8502`.
-- **The map area is blank.** That is the OpenStreetMap tiles failing to load, usually a
-  dropped internet connection. The routing still works; only the map background is
-  affected.
+<details>
+<summary>Example plan request</summary>
 
-## Project files
+```json
+{
+  "depot": "Brasov",
+  "vehicles": [{ "name": "Truck 1", "driver": "Ana", "capacity_kg": 24000, "fuel_l100km": 30,
+                 "crew": false, "count": 1, "home_city": null }],
+  "orders": [{ "pickup": "Arad", "delivery": "Iasi", "demand_kg": 8000, "deadline_h": 36,
+               "earliest_pickup_h": 0, "priority": false }],
+  "mode": "economic",
+  "return_to_depot": true,
+  "allow_split": false
+}
+```
 
-| File | Purpose |
-|------|---------|
-| `main.py` | The user interface and overall flow |
-| `vrp_solver.py` | Route optimization with OR-Tools |
-| `graph_builder.py` | Builds the road network graph |
-| `map_view.py` | 2D and 3D maps and the route simulation |
-| `table_view.py` | Route table and driver-hours checks |
-| `dashboard.py` | Charts, reports and exports |
-| `coords.json`, `roads.json` | City coordinates and the road network |
-| `demo_fleet.json`, `demo_orders.json` | Sample data for a quick test |
-| `requirements.txt` | The packages pip installs |
-| `run.bat` | Windows launcher |
+Times are hours after dispatch (08:00 on the planning day). Invalid input returns
+`400` with a readable `error` message.
+</details>
+
+## Project structure
+
+```
+backend/
+  fleetroute/
+    app.py          Starlette routes and input validation
+    solver.py       OR-Tools model, greedy fallback, strategy comparison
+    planning.py     Input normalisation, load splitting, fleet expansion
+    compliance.py   EU 561/2006 and Romanian HGV rules
+    analytics.py    KPIs, workload, CO2, alerts, timeline
+    exports.py      Excel and PDF reports
+    graph.py        Road network and shortest paths
+    data/           City coordinates, road network, demo data
+  tests/
+frontend/
+  src/
+    App.tsx         Planner state and layout
+    components/     Sidebar forms, map and playback, result tabs
+    api.ts          Typed API client
+    types.ts        Types matching the API responses
+docs/screenshots/
+dev.bat, dev.sh     Start backend and frontend for development
+run.bat             Build once and serve on one port
+```
+
+## Modelling assumptions
+
+- Distances and driving times come from the bundled road graph (shortest path by
+  distance). Map lines connect the cities along that path rather than the exact road
+  geometry.
+- Every pickup and delivery takes 2 hours of loading or unloading.
+- The optimiser plans against delivery deadlines using pure driving time. Mandatory
+  breaks and rests are added afterwards by the compliance check. That is why the routing
+  table can flag a delivery as late that the optimiser accepted: it shows the real
+  impact of driving-time rules on a plan.
+- Weekend and holiday driving bans for trucks over 7.5 t are not modelled.
+
+---
+
+Built by [Catalin](https://github.com/CataBulu). Map data ©
+[OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
