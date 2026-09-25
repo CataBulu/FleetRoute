@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Volvo FH 500 4x2 Globetrotter XL",
+    "driver": "Mihai Dumitrescu",
+    "capacity_kg": 24000,
+    "fuel_l100km": 34.0,
+    "crew": false,
+    "count": 1,
+    "home_city": null
+  },
+  {
+    "name": "Mercedes-Benz Actros 1845 LS BigSpace",
+    "driver": "Elena Stoica",
+    "capacity_kg": 22000,
+    "fuel_l100km": 31.0,
+    "crew": true,
+    "count": 1,
+    "home_city": "Timisoara"
+  },
+  {
+    "name": "DAF CF 340 FA Curtainsider",
+    "driver": "Andrei Moldovan",
+    "capacity_kg": 12000,
+    "fuel_l100km": 24.0,
+    "crew": false,
+    "count": 1,
+    "home_city": "Brasov"
+  },
+  {
+    "name": "Scania P 360 B Box Truck",
+    "driver": "Cosmin Niculescu",
+    "capacity_kg": 9000,
+    "fuel_l100km": 20.0,
+    "crew": false,
+    "count": 1,
+    "home_city": null
+  }
+]

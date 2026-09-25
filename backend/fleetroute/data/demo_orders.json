@@ -2,49 +2,49 @@
   {
     "pickup": "Timisoara",
     "delivery": "Galati",
-    "demand": 18000,
-    "time_limit_hrs": 32,
-    "earliest_pickup_hrs": 0,
+    "demand_kg": 18000,
+    "deadline_h": 32.0,
+    "earliest_pickup_h": 0.0,
     "priority": false
   },
   {
     "pickup": "Alba Iulia",
     "delivery": "Constanta",
-    "demand": 21000,
-    "time_limit_hrs": 40,
-    "earliest_pickup_hrs": 0,
+    "demand_kg": 21000,
+    "deadline_h": 40.0,
+    "earliest_pickup_h": 0.0,
     "priority": false
   },
   {
     "pickup": "Deva",
     "delivery": "Suceava",
-    "demand": 11000,
-    "time_limit_hrs": 36,
-    "earliest_pickup_hrs": 3,
+    "demand_kg": 11000,
+    "deadline_h": 36.0,
+    "earliest_pickup_h": 3.0,
     "priority": false
   },
   {
     "pickup": "Arad",
     "delivery": "Ploiesti",
-    "demand": 4500,
-    "time_limit_hrs": 24,
-    "earliest_pickup_hrs": 0,
+    "demand_kg": 4500,
+    "deadline_h": 24.0,
+    "earliest_pickup_h": 0.0,
     "priority": true
   },
   {
     "pickup": "Sibiu",
     "delivery": "Iasi",
-    "demand": 3200,
-    "time_limit_hrs": 22,
-    "earliest_pickup_hrs": 0,
+    "demand_kg": 3200,
+    "deadline_h": 22.0,
+    "earliest_pickup_h": 0.0,
     "priority": true
   },
   {
     "pickup": "Oradea",
     "delivery": "Brasov",
-    "demand": 7500,
-    "time_limit_hrs": 22,
-    "earliest_pickup_hrs": 0,
+    "demand_kg": 7500,
+    "deadline_h": 22.0,
+    "earliest_pickup_h": 0.0,
     "priority": false
   }
 ]
