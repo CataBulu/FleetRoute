@@ -1,7 +1,18 @@
-# FleetRoute
+# <img src="frontend/public/favicon.svg" width="38" alt=""> FleetRoute
 
-[![CI](https://github.com/CataBulu/FleetRoute/actions/workflows/ci.yml/badge.svg)](https://github.com/CataBulu/FleetRoute/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/CataBulu/FleetRoute/ci.yml?branch=main&label=CI&logo=github)](https://github.com/CataBulu/FleetRoute/actions/workflows/ci.yml)
+[![Python 3.11–3.13](https://img.shields.io/badge/Python-3.11%E2%80%933.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Starlette](https://img.shields.io/badge/Starlette-ASGI-009485)](https://www.starlette.io/)
+[![OR-Tools](https://img.shields.io/badge/OR--Tools-VRP%20solver-4285F4?logo=google&logoColor=white)](https://developers.google.com/optimization/routing)
+[![NetworkX](https://img.shields.io/badge/NetworkX-Dijkstra-2C7FB8)](https://networkx.org/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![Docker](https://img.shields.io/badge/Docker-multi--stage-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![Reports](https://img.shields.io/badge/reports-Excel%20%C2%B7%20PDF-217346)](#highlights)
+[![EU 561/2006](https://img.shields.io/badge/EU%20561%2F2006-compliant-003399?logo=europeanunion&logoColor=FFCC00)](https://eur-lex.europa.eu/eli/reg/2006/561/oj)
+[![License: MIT](https://img.shields.io/github/license/CataBulu/FleetRoute)](LICENSE)
 
 **A delivery route planner for truck fleets.** You enter a depot, your trucks and a list of
 pickup-and-delivery orders. FleetRoute decides which truck carries which load, in what
