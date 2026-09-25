@@ -6,7 +6,6 @@ from .planning import vehicle_label
 
 CO2_KG_PER_LITER_DIESEL = 2.68
 CO2_KG_PER_TREE_YEAR = 21
-FATIGUE_WARNING_SHARE = 0.85
 
 
 def _km(route):
@@ -52,25 +51,27 @@ def vehicle_stats(routes):
     return out
 
 
-def alerts(routes, dropped):
-    items = []
-    for route in routes:
-        veh = route["vehicle"]
-        limit = CREW_DRIVER_DAILY_LIMIT if veh.get("crew") else SINGLE_DRIVER_DAILY_LIMIT
-        drive_h = _hours(route)
-        if drive_h > limit * FATIGUE_WARNING_SHARE:
-            items.append({
-                "severity": "high" if drive_h > limit else "medium",
-                "vehicle": vehicle_label(veh), "type": "Driver fatigue",
-                "detail": f"Drive time {drive_h:.1f}h vs daily limit {limit}h",
-            })
-    for d in dropped:
-        items.append({
-            "severity": "high", "vehicle": None, "type": "Order dropped",
-            "detail": f"{d.get('pickup')} → {d.get('delivery')} "
-                      f"({d.get('demand_kg')} kg, deadline {d.get('deadline_h')}h)",
-        })
-    return sorted(items, key=lambda a: a["severity"] != "high")
+def alerts(dropped, schedule):
+    """Problems a dispatcher must act on, taken from the EU/RO compliance replay.
+    Breaks and rests are already scheduled, so long trips alone are not an alert."""
+    items = [{
+        "severity": "high", "vehicle": None, "type": "Order not planned",
+        "detail": f"{d.get('pickup')} → {d.get('delivery')} ({d.get('demand_kg')} kg, "
+                  f"deadline {d.get('deadline_h'):g} h) cannot be delivered legally in time",
+    } for d in dropped]
+    items += [{
+        "severity": "high", "vehicle": l["vehicle"], "type": "Late delivery",
+        "detail": f"Order #{l['order']} arrives {l['delay_h']:.1f} h after its deadline",
+    } for l in schedule["late"]]
+    items += [{
+        "severity": "high", "vehicle": b["vehicle"], "type": "Two-week driving limit",
+        "detail": f"{b['drive_h']:.1f} h of driving over two weeks (limit {b['limit_h']} h)",
+    } for b in schedule["biweekly_violations"]]
+    items += [{
+        "severity": "medium", "vehicle": v["vehicle"], "type": "Speed",
+        "detail": f"Segment to {v['city']} averages {v['speed_kmh']} km/h (HGV limit {v['limit_kmh']} km/h)",
+    } for v in schedule["speed_violations"]]
+    return items
 
 
 def timeline(routes):

@@ -13,6 +13,7 @@ from math import atan2, cos, radians, sin, sqrt
 
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
+from .compliance import build_schedule, order_label
 from .graph import build_graph, get_distance, get_duration, get_path, load_cities
 
 __all__ = ["solve", "compare_algorithms", "MODES"]
@@ -28,6 +29,8 @@ SOLVER_TIME_LIMIT_S = 10
 METAHEURISTIC_TIME_LIMIT_S = 20
 FALLBACK_SPEED_KMPH = 70           # HGV national-road limit in Romania (OUG 195/2002)
 KM_PER_HOUR_EQUIVALENT = 60        # balanced mode: one hour of driving weighs like 60 km
+REST_REFINEMENT_ROUNDS = 6         # re-plans allowed to absorb EU breaks and rests
+REFINEMENT_MARGIN_H = 0.25         # extra slack when a deadline is brought forward
 
 # Fixed cost for opening a vehicle, so the solver chains orders on one truck
 VEHICLE_STARTUP_COST_KM = 200
@@ -174,8 +177,10 @@ def _greedy_assign(net, depot, orders, vehicles):
 
 # ---------- OR-Tools model ----------
 
-def _solve_model(net, depot, orders, vehicles, mode, return_to_depot, strategy, time_limit_s):
-    """Build and solve the model. Returns per-vehicle stop lists, or None."""
+def _solve_model(net, depot, orders, vehicles, mode, return_to_depot, strategy, deadlines,
+                 guided, time_limit_s):
+    """Build and solve the model. `deadlines` (hours, one per order) may be tighter than
+    the orders' own. Returns per-vehicle stop lists, or None."""
     nodes = [(depot, "depot", None)]
     for o in orders:
         nodes += [(o["pickup"], "pickup", o), (o["delivery"], "delivery", o)]
@@ -230,7 +235,7 @@ def _solve_model(net, depot, orders, vehicles, mode, return_to_depot, strategy, 
         solver.Add(routing.VehicleVar(p) == routing.VehicleVar(d))
         solver.Add(time_dim.CumulVar(p) <= time_dim.CumulVar(d))
         earliest = float(o.get("earliest_pickup_h") or 0) * SECONDS_PER_HOUR
-        deadline = float(o.get("deadline_h") or HORIZON_H) * SECONDS_PER_HOUR
+        deadline = deadlines[i] * SECONDS_PER_HOUR
         time_dim.CumulVar(p).SetRange(max(0, int(earliest)), horizon)
         time_dim.CumulVar(d).SetRange(0, max(1, min(int(deadline), horizon)))
         # priority orders are 5x more expensive to drop
@@ -238,12 +243,8 @@ def _solve_model(net, depot, orders, vehicles, mode, return_to_depot, strategy, 
 
     params = pywrapcp.DefaultRoutingSearchParameters()
     params.first_solution_strategy = strategy
-    if time_limit_s is None:
-        if mode in ("fast", "balanced"):
-            params.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-            time_limit_s = METAHEURISTIC_TIME_LIMIT_S
-        else:
-            time_limit_s = SOLVER_TIME_LIMIT_S
+    if guided:
+        params.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     params.time_limit.seconds = time_limit_s
 
     solution = routing.SolveWithParameters(params)
@@ -280,11 +281,52 @@ def solve(depot, orders, vehicles, mode="economic", return_to_depot=True,
     if not valid:
         return {**empty, "dropped": unknown}
 
-    plan = _solve_model(net, depot, valid, vehicles, mode, return_to_depot,
-                        STRATEGIES[strategy], time_limit_s)
-    if plan is None:
-        plan = _greedy_assign(net, depot, valid, vehicles)
+    def attempt(deadlines, guided, limit):
+        plan = _solve_model(net, depot, valid, vehicles, mode, return_to_depot,
+                            STRATEGIES[strategy], deadlines, guided, limit)
+        return None if plan is None else _plan_result(net, depot, valid, vehicles, plan, return_to_depot)
 
+    # The model only knows driving and loading time. Replay each plan against the EU
+    # driving-time rules and re-plan with each order's deadline scaled by how much breaks
+    # and rests stretch its current route. Orders that cannot be delivered legally end up
+    # dropped instead of silently late; the best round is kept.
+    true_deadlines = [float(o.get("deadline_h") or HORIZON_H) for o in valid]
+    deadlines = list(true_deadlines)
+    result, best_key = None, None
+    for _ in range(REST_REFINEMENT_ROUNDS):
+        candidate = attempt(deadlines, False, time_limit_s or SOLVER_TIME_LIMIT_S)
+        if candidate is None:
+            break
+        timing = _rest_timing(candidate["routes"], valid)
+        late = {i for i, (legal, _) in timing.items() if legal > true_deadlines[i]}
+        key = _quality(candidate, late)
+        if result is None or key < best_key:
+            result, best_key = candidate, key
+        if not late and not candidate["dropped"]:
+            break
+        # served orders get a model deadline that leaves room for their rests; orders
+        # with slack relax back, which can make room for a dropped order next round
+        for i, (legal, planned) in timing.items():
+            stretch = max(legal / max(planned, 1e-6), 1.0)
+            deadlines[i] = true_deadlines[i] / stretch - (REFINEMENT_MARGIN_H if i in late else 0.0)
+
+    if result is None:
+        result = _plan_result(net, depot, valid, vehicles, _greedy_assign(net, depot, valid, vehicles),
+                              return_to_depot)
+    elif time_limit_s is None and mode in ("fast", "balanced"):
+        # longer guided search on the rest-aware deadlines; keep it only if it is no worse
+        polished = attempt(deadlines, True, METAHEURISTIC_TIME_LIMIT_S)
+        if polished:
+            timing = _rest_timing(polished["routes"], valid)
+            late = {i for i, (legal, _) in timing.items() if legal > true_deadlines[i]}
+            if _quality(polished, late)[:2] <= best_key[:2]:
+                result = polished
+
+    result["dropped"] += unknown
+    return result
+
+
+def _plan_result(net, depot, orders, vehicles, plan, return_to_depot):
     routes, polylines, served = [], [], set()
     for vehicle, stops in zip(vehicles, plan):
         if not stops:
@@ -293,9 +335,39 @@ def solve(depot, orders, vehicles, mode="economic", return_to_depot=True,
         route, poly = _route_from_stops(net, depot, vehicle, stops, return_to_depot)
         routes.append(route)
         polylines.append(poly)
-
-    dropped = [o for o in valid if id(o) not in served] + unknown
+    dropped = [o for o in orders if id(o) not in served]
     return {"routes": routes, "polylines": polylines, "dropped": dropped}
+
+
+def _quality(result, late):
+    """Sort key, lower is better: most on-time deliveries, then fewest late, then shortest."""
+    served = sum(1 for r in result["routes"] for s in r["steps"] if s["type"] == "delivery")
+    return (-(served - len(late)), len(late), total_route_km(result["routes"]))
+
+
+def _planned_arrivals(route):
+    """Delivery times as the model sees them: from the depot, driving plus loading,
+    no breaks or rests (and no drive from the truck's starting city)."""
+    steps = route["steps"]
+    start = next((i for i, s in enumerate(steps) if s["type"] == "arrive_depot"), 0)
+    t, arrivals = 0.0, {}
+    for s in steps[start + 1:]:
+        t += float(s.get("duration_h") or 0)
+        if s["type"] == "delivery":
+            arrivals[order_label(s)] = t
+        if s["type"] in ("pickup", "delivery"):
+            t += SERVICE_TIME_H
+    return arrivals
+
+
+def _rest_timing(routes, orders):
+    """{order index: (arrival under EU break and rest rules, arrival the model planned)}."""
+    index = {order_label({"order_id": o.get("id"), "part": o.get("part")}): i for i, o in enumerate(orders)}
+    planned = {}
+    for route in routes:
+        planned.update(_planned_arrivals(route))
+    legal = build_schedule(routes)["arrivals"]
+    return {index[label]: (t, planned.get(label, t)) for label, t in legal.items() if label in index}
 
 
 def total_route_km(routes):

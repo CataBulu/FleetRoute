@@ -3,7 +3,7 @@
     "pickup": "Timisoara",
     "delivery": "Galati",
     "demand_kg": 18000,
-    "deadline_h": 32.0,
+    "deadline_h": 72.0,
     "earliest_pickup_h": 0.0,
     "priority": false
   },
@@ -11,7 +11,7 @@
     "pickup": "Alba Iulia",
     "delivery": "Constanta",
     "demand_kg": 21000,
-    "deadline_h": 40.0,
+    "deadline_h": 72.0,
     "earliest_pickup_h": 0.0,
     "priority": false
   },
@@ -19,7 +19,7 @@
     "pickup": "Deva",
     "delivery": "Suceava",
     "demand_kg": 11000,
-    "deadline_h": 36.0,
+    "deadline_h": 66.0,
     "earliest_pickup_h": 3.0,
     "priority": false
   },
@@ -27,7 +27,7 @@
     "pickup": "Arad",
     "delivery": "Ploiesti",
     "demand_kg": 4500,
-    "deadline_h": 24.0,
+    "deadline_h": 56.0,
     "earliest_pickup_h": 0.0,
     "priority": true
   },
@@ -35,7 +35,7 @@
     "pickup": "Sibiu",
     "delivery": "Iasi",
     "demand_kg": 3200,
-    "deadline_h": 22.0,
+    "deadline_h": 48.0,
     "earliest_pickup_h": 0.0,
     "priority": true
   },
@@ -43,7 +43,7 @@
     "pickup": "Oradea",
     "delivery": "Brasov",
     "demand_kg": 7500,
-    "deadline_h": 22.0,
+    "deadline_h": 60.0,
     "earliest_pickup_h": 0.0,
     "priority": false
   }

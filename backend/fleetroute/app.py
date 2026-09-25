@@ -92,15 +92,16 @@ async def plan(request):
     total = args.pop("total_orders")
     result = await run_in_threadpool(solver.solve, **args)
     routes, dropped = result["routes"], result["dropped"]
+    schedule = compliance.build_schedule(routes)
     return JSONResponse({
         "routes": routes,
         "polylines": result["polylines"],
         "dropped": dropped,
         "kpis": analytics.kpis(routes, dropped, total),
         "vehicle_stats": analytics.vehicle_stats(routes),
-        "alerts": analytics.alerts(routes, dropped),
+        "alerts": analytics.alerts(dropped, schedule),
         "timeline": analytics.timeline(routes),
-        "schedule": compliance.build_schedule(routes),
+        "schedule": schedule,
     })
 
 

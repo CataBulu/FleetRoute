@@ -1,7 +1,12 @@
 """Solver behaviour on a tiny network, plus a few real-data scenarios."""
+import json
+
 import pytest
 
 from fleetroute import solver
+from fleetroute.compliance import build_schedule
+from fleetroute.graph import DATA_DIR
+from fleetroute.planning import expand_fleet, prepare_orders
 from fleetroute.solver import compare_algorithms, expand_leg, prepend_home_leg, solve
 from tests.conftest import make_order, make_vehicle
 
@@ -109,11 +114,28 @@ class TestRealNetwork:
 
     VEHICLES = [make_vehicle("Truck A", 15000), make_vehicle("Truck B", 20000, home_city="Timisoara")]
 
-    @pytest.mark.parametrize("deadline, dropped", [(13, 1), (14, 0)])
-    def test_deadline_boundary(self, deadline, dropped):
-        # Cluj -> Timisoara 4.75h, 2h loading, Timisoara -> Brasov 6.5h = 13.25h
+    @pytest.mark.parametrize("deadline, dropped", [(14, 1), (22, 1), (24, 0)])
+    def test_deadline_boundary_includes_eu_rests(self, deadline, dropped):
+        # Cluj -> Timisoara 4.75h, 2h loading, Timisoara -> Brasov 6.5h = 13.25h of work,
+        # plus a 45 min break and a 9h daily rest for a single driver = 23h
         order = make_order("Timisoara", "Brasov", 1000, deadline=deadline)
-        assert len(solve("Cluj-Napoca", [order], [self.VEHICLES[0]])["dropped"]) == dropped
+        out = solve("Cluj-Napoca", [order], [self.VEHICLES[0]])
+        assert len(out["dropped"]) == dropped
+        assert build_schedule(out["routes"])["late"] == []
+
+    def test_crew_reaches_deadline_a_single_driver_cannot(self):
+        order = make_order("Timisoara", "Brasov", 1000, deadline=16)
+        assert len(solve("Cluj-Napoca", [order], [make_vehicle("Solo", 15000)])["dropped"]) == 1
+        assert solve("Cluj-Napoca", [order], [make_vehicle("Duo", 15000, crew=True)])["dropped"] == []
+
+    @pytest.mark.parametrize("mode", solver.MODES)
+    def test_demo_plan_is_fully_legal(self, mode):
+        vehicles = json.loads((DATA_DIR / "demo_fleet.json").read_text(encoding="utf-8"))
+        orders = json.loads((DATA_DIR / "demo_orders.json").read_text(encoding="utf-8"))
+        out = solve("Brasov", prepare_orders(orders, vehicles, False), expand_fleet(vehicles),
+                    mode=mode, time_limit_s=2)
+        assert out["dropped"] == []
+        assert build_schedule(out["routes"])["late"] == []
 
     def test_mixed_orders_produce_valid_routes(self):
         orders = [

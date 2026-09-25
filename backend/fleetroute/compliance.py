@@ -74,9 +74,9 @@ def _nearest_deadline(steps, cur, onboard, last_delivery):
 
 
 def build_schedule(routes):
-    """Returns rows (one per event), late deliveries, EU/RO violations and fuel use.
-    Fuel is reported in litres; callers multiply by a fuel price."""
-    rows, late, biweekly = [], [], []
+    """Returns rows (one per event), late deliveries, legal arrival time per order,
+    EU/RO violations and fuel use. Fuel is in litres; callers multiply by a fuel price."""
+    rows, late, biweekly, arrivals = [], [], [], {}
     step_no = 1
 
     for v_idx, route in enumerate(routes):
@@ -205,6 +205,7 @@ def build_schedule(routes):
                     onboard[olabel] = float(dl)
 
             if kind == "delivery":
+                arrivals[olabel] = t
                 own = s.get("deadline_h", onboard.get(olabel))
                 if isinstance(own, (int, float)) and own - t < 0:
                     late.append({"vehicle": label, "order": olabel, "delay_h": round(t - own, 4)})
@@ -242,5 +243,5 @@ def build_schedule(routes):
         fuel.append({"vehicle": vehicle_label(veh), "distance_km": round(km, 2),
                      "fuel_l100km": per100, "fuel_l": round(km * per100 / 100.0, 2)})
 
-    return {"rows": rows, "late": late, "biweekly_violations": biweekly,
+    return {"rows": rows, "late": late, "arrivals": arrivals, "biweekly_violations": biweekly,
             "speed_violations": speed_violations, "fuel": fuel}

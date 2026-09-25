@@ -75,8 +75,16 @@ def test_daily_rest_for_single_driver_but_not_crew():
 def test_late_delivery_is_reported():
     route = _long_route(3)
     route[0]["steps"][-1]["deadline_h"] = 1
-    late = compliance.build_schedule(route)["late"]
+    schedule = compliance.build_schedule(route)
+    late = schedule["late"]
     assert late and late[0]["order"] == "1" and late[0]["delay_h"] == pytest.approx(2)
+    assert [a["type"] for a in analytics.alerts([], schedule)] == ["Late delivery"]
+
+
+def test_long_but_compliant_trip_raises_no_alert():
+    schedule = compliance.build_schedule(_long_route(20))
+    assert schedule["late"] == [] and analytics.alerts([], schedule) == []
+    assert schedule["arrivals"]["1"] > 20  # rests were inserted
 
 
 def test_full_pipeline_on_tiny_network(net):
