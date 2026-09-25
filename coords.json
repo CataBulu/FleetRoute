@@ -1,0 +1,670 @@
+{
+    "A1xA6": {
+        "coords": [
+            45.7974, 
+            21.8530
+        ],
+        "visible": false
+    },
+    "Adjud": {
+        "coords": [
+            46.1127, 
+            27.1771
+        ],
+        "visible": false
+    },
+     "Alba Iulia": {
+        "coords": [
+            46.067,
+            23.58
+        ],
+        "visible": true
+    },
+    "Alexandria": {
+        "coords": [
+            43.971,
+            25.333
+        ],
+        "visible": true
+    },
+    "Arad": {
+        "coords": [
+            46.183,
+            21.316
+        ],
+        "visible": true
+    },
+    "Bacau": {
+        "coords": [
+            46.567,
+            26.916
+        ],
+        "visible": true
+    },
+    "Baia": {
+        "coords": [
+            44.7752, 
+            28.6887
+        ],
+        "visible": false
+    },
+    "Baia Mare": {
+        "coords": [
+            47.657,
+            23.568
+        ],
+        "visible": true
+    },
+    "Balauseri": {
+        "coords": [
+            46.4089, 
+            24.6996
+        ],
+        "visible": false
+    },
+    "Barlad": {
+        "coords": [
+            46.23,
+            27.67
+        ],
+        "visible": true
+    },
+    "Beclean": {
+        "coords": [
+            47.1833,
+            24.1833
+        ],
+        "visible": false
+    },
+    "Bicaz": {
+        "coords": [
+            46.9115, 26.0885
+        ],
+        "visible": false
+    },
+    "Bistrita": {
+        "coords": [
+            47.133,
+            24.5
+        ],
+        "visible": true
+    },
+    "Botosani": {
+        "coords": [
+            47.743,
+            26.669
+        ],
+        "visible": true
+    },
+    "Braila": {
+        "coords": [
+            45.271,
+            27.957
+        ],
+        "visible": true
+    },
+    "Brasov": {
+        "coords": [
+            45.648,
+            25.606
+        ],
+        "visible": true
+    },
+    "Bucuresti": {
+        "coords": [
+            44.4268,
+            26.1025
+        ],
+        "visible": true
+    },
+    "Buzau": {
+        "coords": [
+            45.15,
+            26.823
+        ],
+        "visible": true
+    },
+    "Calarasi": {
+        "coords": [
+            44.2,
+            27.333
+        ],
+        "visible": true
+    },
+    "Campulung": {
+        "coords": [
+            45.2738,
+            25.052
+        ],
+        "visible": true
+    },
+    "Caracal": {
+        "coords": [
+            44.1106,
+            24.3467
+        ],
+        "visible": false
+    },
+    "Caransebes": {
+        "coords": [
+            45.41395,
+            22.21911
+        ],
+        "visible": false
+    },
+    "Ceahlau": {
+        "coords": [
+            47.0892, 
+            25.9650
+        ],
+        "visible": false
+    },
+    "Cluj-Napoca": {
+        "coords": [
+            46.771,
+            23.623
+        ],
+        "visible": true
+    },
+    "Constanta": {
+        "coords": [
+            44.174,
+            28.652
+        ],
+        "visible": true
+    },
+    "Craiova": {
+        "coords": [
+            44.33,
+            23.794
+        ],
+        "visible": true
+    },
+    "Dej": {
+        "coords": [
+            47.15,
+            23.867
+        ],
+        "visible": false
+    },
+    "Deva": {
+        "coords": [
+            45.879,
+            22.911
+        ],
+        "visible": true
+    },
+    "Drajna": {
+        "coords": [
+            44.4086, 
+            27.3735
+        ],
+        "visible": false
+    },
+    "Drobeta-Turnu Severin": {
+        "coords": [
+            44.636,
+            22.659
+        ],
+        "visible": true
+    },
+    "Fetesti": {
+        "coords": [
+            44.3833,
+            27.8333
+        ],
+        "visible": false
+    },
+    "Focsani": {
+        "coords": [
+            45.698,
+            27.183
+        ],
+        "visible": true
+    },
+    "Gaesti": {
+        "coords": [
+            44.7167,
+            25.3167
+        ],
+        "visible": false
+    },
+    "Galati": {
+        "coords": [
+            45.438,
+            28.043
+        ],
+        "visible": true
+    },
+    "Ganeasa": {
+        "coords": [
+            44.3987, 
+            24.2762
+        ],
+        "visible": false
+    },
+    "Gheorgheni": {
+        "coords": [
+            46.7224, 
+            25.5991
+        ],
+        "visible": false
+    },
+    "Giurgiu": {
+        "coords": [
+            43.903,
+            25.969
+        ],
+        "visible": true
+    },
+    "Harsova": {
+        "coords": [
+            44.6917, 
+            27.9666
+        ],
+        "visible": false
+    },
+    "Hateg": {
+        "coords": [
+            45.6088, 
+            22.9524
+        ],
+        "visible": false
+    },
+     "Hunedoara": {
+        "coords": [
+            45.75,
+            22.91
+        ],
+        "visible": true
+    },
+    "Iacobeni": {
+        "coords": [
+            47.4416, 
+            25.3052
+        ],
+        "visible": false
+    },
+    "Iasi": {
+        "coords": [
+            47.162,
+            27.588
+        ],
+        "visible": true
+    },
+    "Ilia": {
+        "coords": [
+            45.9438, 
+            22.6251
+        ],
+        "visible": false
+    },
+    "Lehliu": {
+        "coords": [
+            44.44,
+            26.8833
+        ],
+        "visible": false
+    },
+    "Lugoj": {
+        "coords": [
+            45.69,
+            21.89
+        ],
+        "visible": true
+    },
+    "Marasesti": {
+        "coords": [
+            45.8453,
+            27.2103
+        ],
+        "visible": false
+    },
+    "Mangalia": {
+        "coords": [
+            43.81,
+            28.58
+        ],
+        "visible": true
+    },
+    "Medgidia": {
+        "coords": [
+            44.2465, 28.2693
+        ],
+        "visible": true
+    },
+    "Medias": {
+        "coords": [
+            46.17,
+            24.35
+        ],
+        "visible": true
+    },
+    "Miercurea Ciuc": {
+        "coords": [
+            46.361,
+            25.801
+        ],
+        "visible": true
+    },
+    "Mioveni": {
+        "coords": [
+            44.9567, 
+            24.9372
+        ],
+        "visible": true
+    },
+    "Moisei": {
+        "coords": [
+            47.6548, 24.515
+        ],
+        "visible": false
+    },
+    "Navodari": {
+        "coords": [
+            44.3229, 
+            28.6182
+        ],
+        "visible": true
+    },
+    "Oltenita": {
+        "coords": [
+            44.0833,
+            26.6333
+        ],
+        "visible": false
+    },
+    "Odorheiu Secuiesc": {
+        "coords": [
+            46.3049, 
+            25.2926
+        ],
+        "visible": true
+    },
+    "Onesti": {
+        "coords": [
+            46.25,
+            26.75
+        ],
+        "visible": true
+    },
+    "Oradea": {
+        "coords": [
+            47.072,
+            21.921
+        ],
+        "visible": true
+    },
+    "Pascani": {
+        "coords": [
+            47.25,
+            26.73
+        ],
+        "visible": true
+    },
+    "Petrosani": {
+        "coords": [
+            45.4167,
+            23.3667
+        ],
+        "visible": false
+    },
+    "Piatra Neamt": {
+        "coords": [
+            46.927,
+            26.37
+        ],
+        "visible": true
+    },
+    "Pitesti": {
+        "coords": [
+            44.857,
+            24.869
+        ],
+        "visible": true
+    },
+    "Ploiesti": {
+        "coords": [
+            44.944,
+            26.028
+        ],
+        "visible": true
+    },
+    "Ramnicu Sarat": {
+        "coords": [
+            45.3836, 
+            27.041
+        ],
+        "visible": true
+    },
+    "Ramnicu Valcea": {
+        "coords": [
+            45.099,
+            24.375
+        ],
+        "visible": true
+    },
+    "Reghin": {
+        "coords": [
+            46.7667,
+            24.7
+        ],
+        "visible": false
+    },
+    "Resita": {
+        "coords": [
+            45.306,
+            21.886
+        ],
+        "visible": true
+    },
+    "Roman": {
+        "coords": [
+            46.93,
+            26.93
+        ],
+        "visible": true
+    },
+    "Rosiori de Vede": {
+        "coords": [
+            44.1,
+            24.9833
+        ],
+        "visible": false
+    },
+    "Saratel": {
+        "coords": [
+            47.1333,
+            24.5
+        ],
+        "visible": false
+    },
+    "Satu Mare": {
+        "coords": [
+            47.792,
+            22.885
+        ],
+        "visible": true
+    },
+    "Sebes": {
+        "coords": [
+            45.9816,
+            23.5445
+        ],
+        "visible": false
+    },
+    "Sfantu Gheorghe": {
+        "coords": [
+            45.86,
+            25.788
+        ],
+        "visible": true
+    },
+    "Sibiu": {
+        "coords": [
+            45.792,
+            24.151
+        ],
+        "visible": true
+    },
+    "Sighetu Marmatiei": {
+        "coords": [
+            47.9283, 23.8913
+        ],
+        "visible": true
+    },
+    "Sighisoara": {
+        "coords": [
+            46.2242,
+            24.7721
+        ],
+        "visible": false
+    },
+    "Sinaia": {
+        "coords": [
+            45.35,
+            25.55
+        ],
+        "visible": false
+    },
+    "Simeria": {
+        "coords": [
+            45.8372, 
+            23.0407
+        ],
+        "visible": false
+    },
+    "Slatina": {
+        "coords": [
+            44.43,
+            24.371
+        ],
+        "visible": true
+    },
+    "Slobozia": {
+        "coords": [
+            44.57,
+            27.377
+        ],
+        "visible": true
+    },
+    "Suceava": {
+        "coords": [
+            47.637,
+            26.259
+        ],
+        "visible": true
+    },
+    "Targoviste": {
+        "coords": [
+            44.925,
+            25.456
+        ],
+        "visible": true
+    },
+    "Targu Frumos": {
+        "coords": [
+            47.2092, 
+            27.0105
+        ],
+        "visible": false
+    },
+    "Targu Jiu": {
+        "coords": [
+            45.031,
+            23.27
+        ],
+        "visible": true
+    },
+    "Targu Mures": {
+        "coords": [
+            46.544,
+            24.557
+        ],
+        "visible": true
+    },
+    "Targu Neamt": {
+        "coords": [
+            46.544,
+            24.557
+        ],
+        "visible": true
+    },
+    "Targu Secuiesc": {
+        "coords": [
+            45.999, 
+            26.1344
+        ],
+        "visible": false
+    },
+    "Tecuci": {
+        "coords": [
+            45.85,
+            27.43
+        ],
+        "visible": true
+    },
+    "Teius": {
+        "coords": [
+            46.181, 
+            23.6748
+        ],
+        "visible": false
+    },
+    "Timisoara": {
+        "coords": [
+            45.748,
+            21.208
+        ],
+        "visible": true
+    },
+    "Toplita": {
+        "coords": [
+            46.9256, 
+            25.3557
+        ],
+        "visible": false
+    },
+    "Tulcea": {
+        "coords": [
+            45.179,
+            28.804
+        ],
+        "visible": true
+    },
+    "Turda": {
+        "coords": [
+            46.57,
+            23.78
+        ],
+        "visible": true
+    },
+    "Urziceni": {
+        "coords": [
+            44.7167,
+            26.6333
+        ],
+        "visible": false
+    },
+    "Vaslui": {
+        "coords": [
+            46.64,
+            27.729
+        ],
+        "visible": true
+    },
+    "Vatra Dornei": {
+        "coords": [
+           47.3456, 
+           25.3564
+        ],
+        "visible": false
+    },
+    "Zalau": {
+        "coords": [
+            47.2,
+            23.05
+        ],
+        "visible": true
+    }
+}

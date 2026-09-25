@@ -1,0 +1,42 @@
+[
+  {
+    "nume": "Volvo FH 500 4x2 Globetrotter XL",
+    "driver_name": "Mihai Dumitrescu",
+    "capacitate": 24000,
+    "fuel_l100km": 34.0,
+    "tahograf": true,
+    "echipaj": false,
+    "numar": 1,
+    "home_city": null
+  },
+  {
+    "nume": "Mercedes-Benz Actros 1845 LS BigSpace",
+    "driver_name": "Elena Stoica",
+    "capacitate": 22000,
+    "fuel_l100km": 31.0,
+    "tahograf": true,
+    "echipaj": true,
+    "numar": 1,
+    "home_city": "Timisoara"
+  },
+  {
+    "nume": "DAF CF 340 FA Curtainsider",
+    "driver_name": "Andrei Moldovan",
+    "capacitate": 12000,
+    "fuel_l100km": 24.0,
+    "tahograf": true,
+    "echipaj": false,
+    "numar": 1,
+    "home_city": "Brasov"
+  },
+  {
+    "nume": "Scania P 360 B Box Truck",
+    "driver_name": "Cosmin Niculescu",
+    "capacitate": 9000,
+    "fuel_l100km": 20.0,
+    "tahograf": true,
+    "echipaj": false,
+    "numar": 1,
+    "home_city": null
+  }
+]
