@@ -20,11 +20,11 @@ order, and when. Every plan respects truck capacity, delivery deadlines and the 
 driving and rest time.
 
 The optimisation uses Google OR-Tools behind a Python / Starlette API. The interface is
-React + TypeScript with an interactive Leaflet map. The road network of 59 Romanian cities
+React + TypeScript with an interactive Leaflet map, in dark and light themes. The road network of 59 Romanian cities
 ships with the project, so planning runs entirely offline. Only the map background comes
 from OpenStreetMap.
 
-![FleetRoute overview: KPIs and the planned routes on the map](docs/screenshots/overview.png)
+![FleetRoute in the dark theme: KPIs and the planned routes on the map](docs/screenshots/overview.png)
 
 ## Highlights
 
@@ -47,26 +47,34 @@ from OpenStreetMap.
   notifications.
 - **Exports.** Excel and PDF reports, plus JSON import and export of fleets, orders and
   whole scenarios.
+- **Dark, light and auto themes.** A dark interface with a blue accent and a light
+  counterpart. Auto follows the operating system as it changes, the choice is remembered,
+  and a reload never flashes the wrong theme. Every colour, including the map lines and
+  charts, comes from CSS design tokens, and text meets WCAG AA contrast in both themes.
 
 ## Screenshots
 
-| Route playback | Journey timeline |
+| Light theme | Route playback |
 |---|---|
-| ![Trucks moving along their routes](docs/screenshots/playback.png) | ![Step-by-step journey per truck](docs/screenshots/journey.png) |
+| ![The same plan in the light theme](docs/screenshots/overview-light.png) | ![Trucks moving along their routes](docs/screenshots/playback.png) |
 
-| EU 561/2006 routing table | Schedule chart |
+| Journey timeline | Driver workload |
 |---|---|
-| ![Routing table with breaks, rests and deadlines](docs/screenshots/routing-table.png) | ![Gantt-style schedule per truck](docs/screenshots/schedule-chart.png) |
+| ![Step-by-step journey per truck](docs/screenshots/journey.png) | ![Driving hours against the EU allowance](docs/screenshots/workload.png) |
 
-| Cost breakdown | Driver workload |
+| Schedule chart | Cost breakdown |
 |---|---|
-| ![Fuel, driver pay and vehicle wear](docs/screenshots/costs.png) | ![Driving hours against the EU allowance](docs/screenshots/workload.png) |
+| ![Gantt-style schedule per truck](docs/screenshots/schedule-chart.png) | ![Fuel, driver pay and vehicle wear](docs/screenshots/costs.png) |
+
+**EU 561/2006 routing table**, with breaks and rests inserted where the regulation requires them:
+
+![Routing table with breaks, rests and deadlines](docs/screenshots/routing-table.png)
 
 ## Tech stack
 
 | Layer | Technologies |
 |-------|--------------|
-| Frontend | React 19, TypeScript, Vite, Leaflet / react-leaflet, hand-written SVG charts |
+| Frontend | React 19, TypeScript, Vite, Leaflet / react-leaflet, hand-written SVG charts, CSS design tokens (dark and light themes) |
 | Backend | Python 3.11–3.13, Starlette, Uvicorn |
 | Optimisation | Google OR-Tools (constraint solver), NetworkX (Dijkstra shortest paths) |
 | Reports | xlsxwriter, fpdf2 |
@@ -245,7 +253,9 @@ backend/
 frontend/
   src/
     App.tsx         Planner state and layout
-    components/     Sidebar forms, map and playback, result tabs
+    components/     Sidebar forms, map and playback, result tabs, theme switch
+    styles.css      Design tokens for both themes, then the styles that use them
+    theme.ts        Light / dark / auto: applies the saved choice and follows the OS
     api.ts          Typed API client
     types.ts        Types matching the API responses
 .github/workflows/  CI pipeline
