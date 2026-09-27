@@ -27,7 +27,7 @@ jobs:
       - run: python -m pytest backend
 
   frontend:
-    name: Frontend type-check, lint and build
+    name: Frontend type-check, lint, tests and build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,6 +42,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm test
       - run: npm run build
 
   docker:

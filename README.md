@@ -7,6 +7,7 @@
 [![NetworkX](https://img.shields.io/badge/NetworkX-Dijkstra-2C7FB8)](https://networkx.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vitest](https://img.shields.io/badge/Vitest-unit%20tests-6E9F18?logo=vitest&logoColor=white)](#tests)
 [![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-OpenStreetMap-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
 [![Docker](https://img.shields.io/badge/Docker-multi--stage-2496ED?logo=docker&logoColor=white)](Dockerfile)
@@ -78,7 +79,7 @@ from OpenStreetMap.
 | Backend | Python 3.11–3.13, Starlette, Uvicorn |
 | Optimisation | Google OR-Tools (constraint solver), NetworkX (Dijkstra shortest paths) |
 | Reports | xlsxwriter, fpdf2 |
-| Quality | pytest (53 tests), TypeScript strict mode, oxlint, GitHub Actions CI |
+| Quality | pytest (53 tests), Vitest (39 tests), TypeScript strict mode, oxlint, GitHub Actions CI, CodeQL |
 | Delivery | Multi-stage Docker image, Render blueprint |
 
 ## Architecture
@@ -191,6 +192,10 @@ npm --prefix frontend run typecheck
 npm --prefix frontend run lint
 ```
 
+```bash
+npm --prefix frontend test
+```
+
 The backend suite has 53 tests:
 - solver behaviour on a small fixed network: deadlines, waiting for pickup windows,
   priorities, open routing, fallback
@@ -200,9 +205,15 @@ The backend suite has 53 tests:
 - input handling and load splitting
 - the HTTP API
 
+The frontend suite (Vitest) has 39 tests:
+- time and number formatting, and importing fleets and orders saved by the original version
+- truck positions during route playback, including the 2 h loading stops
+- the API client's error messages
+- the theme rules, including a check that the no-flash script in `index.html` agrees with them
+
 GitHub Actions runs everything on every push:
 - the backend suite on Python 3.11, 3.12 and 3.13
-- the frontend type-check, lint and build
+- the frontend type-check, lint, unit tests and build
 - a Docker build that starts the container and checks that the demo plan is fully
   on time
 
