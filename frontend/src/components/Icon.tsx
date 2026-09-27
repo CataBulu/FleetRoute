@@ -31,6 +31,9 @@ const PATHS = {
   info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v6M12 7.5v.01',
   message: 'M4 5h16v11H9l-5 4z',
   save: 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
+  monitor: 'M3 4h18v12H3zM8 20h8M12 16v4',
 } as const
 
 export type IconName = keyof typeof PATHS

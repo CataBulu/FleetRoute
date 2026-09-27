@@ -194,7 +194,9 @@ export function RouteMap({ cities, depot, result, simulate, onExitSimulation }: 
 }
 
 /** Cities, route lines and stop markers. Memoised so the 60 fps playback clock
- *  only re-renders the moving trucks. */
+ *  only re-renders the moving trucks. Theme colours come from CSS classes (styles.css);
+ *  `className` must be a prop, because react-leaflet applies `pathOptions` later via
+ *  setStyle, which ignores it. */
 const StaticLayers = memo(function StaticLayers({ cities, cityByName, roles, result, simulate }: {
   cities: City[]
   cityByName: Map<string, City>
@@ -205,8 +207,8 @@ const StaticLayers = memo(function StaticLayers({ cities, cityByName, roles, res
   return (
     <>
       {cities.filter((c) => !roles.has(c.name)).map((c) => (
-        <CircleMarker key={c.name} center={[c.lat, c.lon]} radius={4}
-          pathOptions={{ color: '#6b8bb3', weight: 1, fillColor: '#ffffff', fillOpacity: 0.9 }}>
+        <CircleMarker key={c.name} center={[c.lat, c.lon]} radius={4} className="city-dot"
+          pathOptions={{ weight: 1, fillOpacity: 0.9 }}>
           <Tooltip direction="top">{c.name}</Tooltip>
         </CircleMarker>
       ))}
@@ -217,19 +219,19 @@ const StaticLayers = memo(function StaticLayers({ cities, cityByName, roles, res
         return (
           <Fragment key={i}>
             {p.pre.length > 1 && (
-              <Polyline positions={p.pre} pathOptions={{ color: '#64748b', weight: 3, dashArray: '6 8', opacity: 0.8 }}>
+              <Polyline positions={p.pre} className="route-pre" pathOptions={{ weight: 3, dashArray: '6 8', opacity: 0.8 }}>
                 <Tooltip sticky>{name}: to the depot</Tooltip>
               </Polyline>
             )}
             {p.outbound.length > 1 && (
               <>
-                <Polyline positions={p.outbound} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.9 }} />
+                <Polyline positions={p.outbound} className="route-casing" pathOptions={{ weight: 9, opacity: 0.9 }} />
                 <Polyline positions={p.outbound} pathOptions={{ color, weight: 5, opacity: 0.95 }}>
                   <Tooltip sticky>{name}: deliveries</Tooltip>
                 </Polyline>
                 {!simulate && (
-                  <Polyline positions={p.outbound} interactive={false}
-                    pathOptions={{ color: '#ffffff', weight: 2.5, opacity: 0.95, className: 'route-flow' }} />
+                  <Polyline positions={p.outbound} interactive={false} className="route-flow"
+                    pathOptions={{ weight: 2.5, opacity: 0.95 }} />
                 )}
               </>
             )}

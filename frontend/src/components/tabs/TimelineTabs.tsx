@@ -7,13 +7,13 @@ const DISPATCH_HOUR = 8
 const spansDays = (timeline: VehicleTimeline[]) => Math.max(0, ...timeline.map((v) => v.end)) + DISPATCH_HOUR > 24
 
 const STOP_STYLE: Record<StepType, { icon: IconName; color: string; label: (order: string | null) => string; note: string }> = {
-  depart: { icon: 'home', color: '#2B7DE9', label: () => 'Leave the depot', note: 'Start' },
-  home_depart: { icon: 'truck', color: '#06B6D4', label: () => 'Leave current location', note: 'Start' },
-  arrive_depot: { icon: 'home', color: '#2B7DE9', label: () => 'Reach the depot', note: 'Ready' },
-  pickup: { icon: 'box', color: '#F97316', label: (o) => `Pick up order #${o}`, note: 'Loading 2 h' },
-  delivery: { icon: 'flag', color: '#16A34A', label: (o) => `Deliver order #${o}`, note: 'Unloading 2 h' },
-  return: { icon: 'restart', color: '#64748B', label: () => 'Back at the depot', note: 'Done' },
-  transit: { icon: 'route', color: '#94A3B8', label: () => 'Transit', note: '' },
+  depart: { icon: 'home', color: 'var(--stop-depot)', label: () => 'Leave the depot', note: 'Start' },
+  home_depart: { icon: 'truck', color: 'var(--stop-home)', label: () => 'Leave current location', note: 'Start' },
+  arrive_depot: { icon: 'home', color: 'var(--stop-depot)', label: () => 'Reach the depot', note: 'Ready' },
+  pickup: { icon: 'box', color: 'var(--stop-pickup)', label: (o) => `Pick up order #${o}`, note: 'Loading 2 h' },
+  delivery: { icon: 'flag', color: 'var(--stop-delivery)', label: (o) => `Deliver order #${o}`, note: 'Unloading 2 h' },
+  return: { icon: 'restart', color: 'var(--stop-return)', label: () => 'Back at the depot', note: 'Done' },
+  transit: { icon: 'route', color: 'var(--stop-transit)', label: () => 'Transit', note: '' },
 }
 
 export function JourneyTab({ timeline }: { timeline: VehicleTimeline[] }) {
@@ -49,9 +49,10 @@ export function JourneyTab({ timeline }: { timeline: VehicleTimeline[] }) {
   )
 }
 
+// theme tokens (styles.css): loading/unloading is dark on the light theme and light on the dark one
 const SEGMENT_COLORS: Record<TimelineSegment['type'], string> = {
-  transit: '#93C5FD', pickup: '#FB923C', delivery: '#4ADE80', return: '#CBD5E1',
-  home_depart: '#67E8F9', arrive_depot: '#60A5FA', depart: '#60A5FA', service: '#1E3A5F',
+  transit: 'var(--seg-transit)', pickup: 'var(--seg-pickup)', delivery: 'var(--seg-delivery)', return: 'var(--seg-return)',
+  home_depart: 'var(--seg-home)', arrive_depot: 'var(--seg-depot)', depart: 'var(--seg-depot)', service: 'var(--seg-service)',
 }
 const SEGMENT_LEGEND: [string, string][] = [
   ['Driving', SEGMENT_COLORS.transit], ['Arriving at a pickup', SEGMENT_COLORS.pickup],

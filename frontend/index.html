@@ -2,6 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Resolve the saved theme before anything paints, so a reload never flashes the wrong one.
+      // Mirrors useApplyTheme in src/theme.ts: 'light' | 'dark' | 'auto' (default), stored as JSON.
+      (function () {
+        var pref = 'auto'
+        try { pref = JSON.parse(localStorage.getItem('fleetroute.theme')) || 'auto' } catch (e) {}
+        var dark = pref === 'dark' || (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
+    <style>
+      /* page colour until the stylesheet arrives (in dev, Vite injects it from JavaScript) */
+      html[data-theme='dark'] { background: #07070a; color-scheme: dark; }
+      html[data-theme='light'] { background: #fafafb; color-scheme: light; }
+    </style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Plan delivery routes for a truck fleet across Romania, within EU driver-hours rules." />

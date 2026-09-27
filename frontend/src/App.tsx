@@ -5,8 +5,10 @@ import { Icon } from './components/Icon'
 import { OrdersSection } from './components/OrdersSection'
 import { CompareCard, DroppedOrders, Kpis, ResultTabs } from './components/Results'
 import { RouteMap } from './components/RouteMap'
+import { ThemeToggle } from './components/ThemeToggle'
 import { Banner, CitySelect, Section } from './components/ui'
 import { DEFAULT_FUEL_PRICE } from './format'
+import { useApplyTheme, type ThemePref } from './theme'
 import type { City, CompareRow, Mode, Order, PlanRequest, PlanResult, Vehicle } from './types'
 
 const MODES: { id: Mode; title: string; text: string }[] = [
@@ -45,6 +47,8 @@ export default function App() {
   const [returnToDepot, setReturnToDepot] = usePersistent('returnToDepot', true)
   const [allowSplit, setAllowSplit] = usePersistent('allowSplit', true)
   const [fuelPrice, setFuelPrice] = usePersistent('fuelPrice', DEFAULT_FUEL_PRICE)
+  const [theme, setTheme] = usePersistent<ThemePref>('theme', 'auto')
+  useApplyTheme(theme)
 
   const [result, setResult] = useState<PlanResult | null>(null)
   const [resultKey, setResultKey] = useState('')
@@ -118,6 +122,7 @@ export default function App() {
             <h1>FleetRoute</h1>
             <p>Delivery route planner for truck fleets</p>
           </div>
+          <ThemeToggle value={theme} onChange={setTheme} />
         </div>
 
         <div className="sidebar-body">

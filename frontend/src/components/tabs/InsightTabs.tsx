@@ -35,7 +35,7 @@ export function WorkloadTab({ stats }: { stats: VehicleStat[] }) {
       <div className="bars">
         {stats.map((s) => {
           const share = s.workload_share
-          const color = share < 0.7 ? '#22C55E' : share < 0.95 ? '#F59E0B' : '#EF4444'
+          const color = share < 0.7 ? 'var(--success)' : share < 0.95 ? 'var(--warning)' : 'var(--danger)'
           return (
             <div className="bar-row" key={s.index}>
               <div className="bar-label"><VehicleDot color={routeColor(s.index)} />{s.vehicle}{s.crew && ' · crew'}</div>
@@ -51,7 +51,8 @@ export function WorkloadTab({ stats }: { stats: VehicleStat[] }) {
   )
 }
 
-const COST_COLORS = ['#2B7DE9', '#38BDF8', '#A5B4FC']
+// theme tokens (styles.css), so the chart follows light and dark
+const COST_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)']
 
 function Donut({ parts }: { parts: { label: string; value: number }[] }) {
   const total = parts.reduce((s, p) => s + p.value, 0) || 1
@@ -61,15 +62,15 @@ function Donut({ parts }: { parts: { label: string; value: number }[] }) {
   const offsets = lengths.map((_, i) => lengths.slice(0, i).reduce((s, l) => s + l, 0))
   return (
     <svg viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Cost breakdown">
-      <circle cx="100" cy="100" r={r} fill="none" stroke="#EAF3FD" strokeWidth="28" />
+      <circle className="donut-track" cx="100" cy="100" r={r} fill="none" strokeWidth="28" />
       {parts.map((p, i) => (
-        <circle key={p.label} cx="100" cy="100" r={r} fill="none" stroke={COST_COLORS[i]} strokeWidth="28"
+        <circle key={p.label} cx="100" cy="100" r={r} fill="none" style={{ stroke: COST_COLORS[i] }} strokeWidth="28"
           strokeDasharray={`${lengths[i]} ${c - lengths[i]}`} strokeDashoffset={-offsets[i]} transform="rotate(-90 100 100)">
           <title>{`${p.label}: ${ron(p.value)}`}</title>
         </circle>
       ))}
-      <text x="100" y="96" textAnchor="middle" fontSize="12" fill="#46607F">Total</text>
-      <text x="100" y="116" textAnchor="middle" fontSize="15" fontWeight="700" fill="#0F2742">
+      <text className="donut-label" x="100" y="96" textAnchor="middle" fontSize="12">Total</text>
+      <text className="donut-total" x="100" y="116" textAnchor="middle" fontSize="15">
         {Math.round(total).toLocaleString()} RON
       </text>
     </svg>
