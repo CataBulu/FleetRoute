@@ -1,6 +1,7 @@
 # <img src="frontend/public/favicon.svg" width="38" alt=""> FleetRoute
 
 [![CI](https://img.shields.io/github/actions/workflow/status/CataBulu/FleetRoute/ci.yml?branch=main&label=CI&logo=github)](https://github.com/CataBulu/FleetRoute/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/CataBulu/FleetRoute/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/CataBulu/FleetRoute/actions/workflows/github-code-scanning/codeql)
 [![Python 3.11–3.13](https://img.shields.io/badge/Python-3.11%E2%80%933.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Starlette](https://img.shields.io/badge/Starlette-ASGI-009485)](https://www.starlette.io/)
 [![OR-Tools](https://img.shields.io/badge/OR--Tools-VRP%20solver-4285F4?logo=google&logoColor=white)](https://developers.google.com/optimization/routing)
