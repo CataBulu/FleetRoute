@@ -136,7 +136,10 @@ def build_schedule(routes):
 
             while True:
                 # weekly rest has priority: EU 561/2006 Art. 8(6)
-                weekly_exceeded = weekly_drive + dur > WEEKLY_DRIVE_LIMIT
+                # A rest or break only goes in after some driving: breaks sit between road
+                # segments, so a segment longer than a limit cannot be split and must not
+                # make this loop add rests forever (the export endpoint replays client routes).
+                weekly_exceeded = weekly_drive > 0 and weekly_drive + dur > WEEKLY_DRIVE_LIMIT
                 six_days = t - weekly_start > MAX_HOURS_BEFORE_WEEKLY_REST
                 if weekly_exceeded or six_days:
                     use_reduced = not reduced_weekly_used
@@ -160,7 +163,7 @@ def build_schedule(routes):
 
                 window_hit = since_window + dur > window_limit
                 daily_hit = since_rest + dur > daily_limit
-                if window_hit or daily_hit:
+                if (window_hit or daily_hit) and since_rest > 0:
                     # Art. 8(4): up to 3 reduced (9h) daily rests between weekly rests
                     use_reduced = reduced_daily_count < MAX_REDUCED_DAILY_RESTS
                     rest = DAILY_REST_REDUCED if use_reduced else DAILY_REST_NORMAL
@@ -174,7 +177,7 @@ def build_schedule(routes):
                         "On route", time_left=slack_at(i, show), tacho=daily_limit)
                     continue
 
-                if since_break + dur > BREAK_WINDOW:
+                if since_break > 0 and since_break + dur > BREAK_WINDOW:
                     t += DRIVER_BREAK
                     since_break = 0.0
                     since_window += DRIVER_BREAK

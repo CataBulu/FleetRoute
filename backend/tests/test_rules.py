@@ -66,6 +66,20 @@ def test_break_after_four_and_a_half_hours():
     assert kinds.index("break") == 5  # depart + 4 transits, then the break before the 5th hour
 
 
+def test_a_segment_longer_than_the_break_window_still_finishes():
+    # Breaks go between segments, so a 6 h segment cannot be split. This used to insert
+    # breaks and rests forever; the export endpoint replays routes sent by the browser.
+    import threading
+    route = _long_route(1)
+    route[0]["steps"][-1]["duration_h"] = 6
+    result = {}
+    worker = threading.Thread(target=lambda: result.update(compliance.build_schedule(route)), daemon=True)
+    worker.start()
+    worker.join(timeout=5)
+    assert not worker.is_alive(), "build_schedule never finished"
+    assert [r["kind"] for r in result["rows"]].count("break") == 0
+
+
 def test_daily_rest_for_single_driver_but_not_crew():
     single = [r["kind"] for r in compliance.build_schedule(_long_route(12))["rows"]]
     crew = [r["kind"] for r in compliance.build_schedule(_long_route(12, crew=True))["rows"]]
