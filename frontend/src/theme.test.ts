@@ -20,7 +20,9 @@ describe('resolveTheme', () => {
 // The inline script in index.html sets the theme before React loads, so a reload never flashes
 // the wrong one. It cannot import resolveTheme, so check that the two agree.
 describe('the no-flash script in index.html', () => {
-  const script = indexHtml.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? ''
+  // plain text search: index.html has exactly one inline <script>, written by us
+  const start = indexHtml.indexOf('<script>') + '<script>'.length
+  const script = indexHtml.slice(start, indexHtml.indexOf('</script>', start))
 
   function run(stored: string | null, osDark: boolean) {
     const root = { dataset: {} as Record<string, string> }
