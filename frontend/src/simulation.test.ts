@@ -45,3 +45,27 @@ describe('positionAt', () => {
     expect(positionAt(idle, 3)).toEqual([0, 0])
   })
 })
+
+describe('following the road shape', () => {
+  // an L-shaped road from (0, 0) to (10, 10) round the corner at (0, 10), driven in 5 h
+  const bent: Route = {
+    ...route,
+    steps: [step('depart', [0, 0], 0), { ...step('pickup', [10, 10], 5), geometry: [[0, 0], [0, 10], [10, 10]] }],
+  }
+  const track = buildTrack(bent)
+
+  it('keeps the step time, split along the road', () => {
+    expect(track.end).toBe(5 + SERVICE_TIME_H)
+    expect(track.legs.filter((l) => l.from !== l.to).at(-1)?.end).toBe(5)
+  })
+
+  it('is at the corner halfway through, not on the straight line', () => {
+    const [lat, lon] = positionAt(track, 2.5)
+    expect(lat).toBeCloseTo(0, 5)
+    expect(lon).toBeCloseTo(10, 5)
+  })
+
+  it('reaches the stop when the drive ends', () => {
+    expect(positionAt(track, 5)).toEqual([10, 10])
+  })
+})

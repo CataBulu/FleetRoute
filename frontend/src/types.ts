@@ -41,6 +41,8 @@ export interface Step {
   coords: LatLng
   distance_km: number
   duration_h: number
+  /** Road shape driven to reach this step (absent for the first step). */
+  geometry?: LatLng[]
   order_id?: number
   part?: number | null
   deadline_h?: number
