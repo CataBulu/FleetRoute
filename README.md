@@ -22,14 +22,18 @@ order, and when. Every plan respects truck capacity, delivery deadlines and the 
 driving and rest time.
 
 The optimisation uses Google OR-Tools behind a Python / Starlette API. The interface is
-React + TypeScript with an interactive Leaflet map, in dark and light themes. The road network of 59 Romanian cities
-ships with the project, so planning runs entirely offline. Only the map background comes
-from OpenStreetMap.
+React + TypeScript with an interactive Leaflet map, in dark and light themes. A road
+network covering every city and town in Romania ships with the project, with real road
+distances, truck driving times and road shapes, so planning runs entirely offline. Only the
+map background is loaded from OpenStreetMap.
 
 ![FleetRoute in the dark theme: KPIs and the planned routes on the map](docs/screenshots/overview.png)
 
 ## Highlights
 
+- **The whole of Romania.** All 318 cities and towns reachable by road, from Bucharest to
+  the smallest town, linked by the real roads between them. Any of them can be a depot,
+  a pickup or a delivery.
 - **Vehicle routing with real constraints.** Pickup-and-delivery pairs on the same truck,
   capacity per vehicle, delivery deadlines, earliest pickup times and priority orders.
   All of it is modelled with the OR-Tools routing solver, with a greedy fallback.
@@ -42,8 +46,8 @@ from OpenStreetMap.
   of both, plus a side-by-side comparison of four first-solution strategies.
 - **Load splitting.** Orders heavier than the biggest truck are split across several
   vehicles.
-- **Route playback.** Trucks move across the map on their planned schedule, stopping for
-  loading and unloading.
+- **Route playback.** Trucks drive along the real roads on the map, on their planned
+  schedule, stopping for loading and unloading.
 - **Operational dashboards.** Journey timeline, Gantt-style schedule, driver workload,
   cost breakdown, CO₂ footprint, alerts, Romanian truck speed-limit checks and customer
   notifications.
@@ -79,8 +83,9 @@ from OpenStreetMap.
 | Frontend | React 19, TypeScript, Vite, Leaflet / react-leaflet, hand-written SVG charts, CSS design tokens (dark and light themes) |
 | Backend | Python 3.11–3.13, Starlette, Uvicorn |
 | Optimisation | Google OR-Tools (constraint solver), NetworkX (Dijkstra shortest paths) |
+| Road data | OpenStreetMap via OSRM (distances, times, road shapes), Wikidata (towns), built once by a script |
 | Reports | xlsxwriter, fpdf2 |
-| Quality | pytest (53 tests), Vitest (39 tests), TypeScript strict mode, oxlint, GitHub Actions CI, CodeQL |
+| Quality | pytest (73 tests + data checks on all 1,704 road links), Vitest (42 tests), TypeScript strict mode, oxlint, GitHub Actions CI, CodeQL |
 | Delivery | Multi-stage Docker image, Render blueprint |
 
 ## Architecture
@@ -91,7 +96,7 @@ flowchart LR
     API --> PLAN["planning.py<br/>split loads, expand fleet"]
     PLAN --> SOLVER["solver.py<br/>OR-Tools model"]
     SOLVER <-->|"re-plan with<br/>rest-aware deadlines"| RULES["compliance.py<br/>EU 561/2006 replay"]
-    SOLVER --> GRAPH["graph.py<br/>road network + Dijkstra"]
+    SOLVER --> GRAPH["graph.py<br/>road network, Dijkstra,<br/>road shapes"]
     API --> ANALYTICS["analytics.py<br/>KPIs, timeline, CO₂"]
     API --> EXPORTS["exports.py<br/>Excel / PDF"]
     UI --> MAP["Leaflet map<br/>OpenStreetMap tiles"]
@@ -197,26 +202,37 @@ npm --prefix frontend run lint
 npm --prefix frontend test
 ```
 
-The backend suite has 53 tests:
+The backend suite has 73 tests, plus two data checks on each of the 1,704 road links
+(3,481 in all):
 - solver behaviour on a small fixed network: deadlines, waiting for pickup windows,
   priorities, open routing, fallback
 - EU-rule boundaries on the real road network, e.g. a delivery a single driver cannot
   make but a two-driver crew can
-- the rules engine
+- the rules engine, including a segment longer than the break window (it used to loop
+  forever)
 - input handling and load splitting
 - the HTTP API
+- the road network: all 318 towns connected, the original city names kept, every link's
+  truck time plausible and inside the EU break window, and every road shape running from
+  town to town with a length close to the one the planner uses
+- the network builder's offline parts: town names, shape encoding and simplification,
+  truck times, and how links and shortcuts are chosen
 
-The frontend suite (Vitest) has 39 tests:
+The frontend suite (Vitest) has 42 tests:
 - time and number formatting, and importing fleets and orders saved by the original version
-- truck positions during route playback, including the 2 h loading stops
+- truck positions during route playback, along the road shapes and through the 2 h loading stops
 - the API client's error messages
 - the theme rules, including a check that the no-flash script in `index.html` agrees with them
 
-GitHub Actions runs everything on every push:
+GitHub Actions runs everything on every push and pull request:
 - the backend suite on Python 3.11, 3.12 and 3.13
 - the frontend type-check, lint, unit tests and build
-- a Docker build that starts the container and checks that the demo plan is fully
-  on time
+- a Docker build that starts the container and checks that the demo plan is fully on
+  time, that all 318 towns are served, that a trip between small towns at opposite ends
+  of the country follows real roads, and that responses are compressed
+
+Every job has a time limit, and a newer push cancels the run it replaces. CodeQL scans
+the Python, TypeScript and workflow code for security issues.
 
 ## API
 
@@ -224,7 +240,7 @@ GitHub Actions runs everything on every push:
 |--------|------|---------|
 | GET | `/api/cities` | Selectable cities with coordinates |
 | GET | `/api/demo` | Sample depot, fleet and orders |
-| POST | `/api/plan` | Solve a plan. Returns routes, map lines, KPIs, schedule, timeline and alerts |
+| POST | `/api/plan` | Solve a plan. Returns routes (each step with its road shape), map lines, KPIs, schedule, timeline and alerts |
 | POST | `/api/compare` | Solve with each first-solution strategy and compare the results |
 | POST | `/api/export/{xlsx,pdf}` | Report for a set of planned routes |
 
@@ -260,7 +276,7 @@ backend/
     analytics.py    KPIs, workload, CO2, alerts, timeline
     exports.py      Excel and PDF reports
     graph.py        Road network and shortest paths
-    data/           City coordinates, road network, demo data
+    data/           Towns, road network and road shapes, demo data
   tests/
 frontend/
   src/
@@ -276,13 +292,25 @@ Dockerfile          Multi-stage build: Vite bundle + Python API
 render.yaml         Render deployment blueprint
 dev.bat, dev.sh     Start backend and frontend for development
 run.bat             Build once and serve on one port
+scripts/            Setup helper; build_road_network.py rebuilds the road network
 ```
 
 ## Modelling assumptions
 
-- Distances and driving times come from the bundled road graph (shortest path by
-  distance). Map lines connect the cities along that path rather than the exact road
-  geometry.
+- The road network was built once by `scripts/build_road_network.py` and ships in
+  `backend/fleetroute/data/`. The towns are Romania's 103 municipalities and 216 towns
+  from [Wikidata](https://www.wikidata.org/), except Sulina, which has no road to the rest
+  of the country. Each town is linked to its nearest towns, and
+  [OSRM](https://project-osrm.org/) gives every link's road distance, driving time and
+  shape (simplified to within 20 m). Direct links are added wherever a trip through the
+  nearby towns would be over 5% longer or 10% slower than the real road, so 95% of all
+  town-to-town trips are within 3% of the real road distance.
+- Truck driving times are OSRM's car times plus 10%, and never faster than an 80 km/h
+  average on any link (Romanian limits for trucks are 90 km/h on motorways and 70 km/h
+  on national roads).
+- Trucks take the fastest route through the network. Its time, its distance and the towns
+  it passes all come from that one route, and the lines on the map and the trucks in
+  playback follow its real roads.
 - Every pickup and delivery takes 2 hours of loading or unloading.
 - Rest-aware planning is a heuristic. When the fleet is too tight to do everything legally
   on time, the routing table still flags any delivery that ends up late.
@@ -290,7 +318,12 @@ run.bat             Build once and serve on one port
 
 ## License
 
-Released under the [MIT License](LICENSE).
+The code is released under the [MIT License](LICENSE).
+
+The road network in `backend/fleetroute/data/` (`roads.json` and `road_geometry.json`) is
+derived from OpenStreetMap data, © OpenStreetMap contributors, and is available under the
+[Open Database License](https://opendatacommons.org/licenses/odbl/1-0/). Town names and
+positions come from Wikidata (CC0).
 
 ---
 
