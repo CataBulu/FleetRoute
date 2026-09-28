@@ -24,9 +24,10 @@ def payload(**overrides):
     return body | overrides
 
 
-def test_cities_lists_visible_cities_only(client):
+def test_cities_lists_every_city_and_town_in_romania(client):
     names = [c["name"] for c in client.get("/api/cities").json()["cities"]]
-    assert "Cluj-Napoca" in names and "A1xA6" not in names
+    assert len(names) == 318  # 103 municipalities and 216 towns, minus Sulina (no road)
+    assert {"Cluj-Napoca", "Bucuresti", "Abrud", "Stefanesti (Arges)", "Stefanesti (Botosani)"} <= set(names)
     assert names == sorted(names)
 
 

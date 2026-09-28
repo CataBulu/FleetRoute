@@ -3,7 +3,8 @@
 Data shapes (all plain dicts, JSON-ready):
   vehicle: {name, driver, capacity_kg, fuel_l100km, crew, count, home_city}
   order:   {id, part, pickup, delivery, demand_kg, deadline_h, earliest_pickup_h, priority}
-  step:    {type, city, coords, distance_km, duration_h, [order_id, part, deadline_h]}
+  step:    {type, city, coords, distance_km, duration_h, [geometry], [order_id, part, deadline_h]}
+           geometry: the road shape driven to reach this step, [[lat, lon], ...]
   route:   {vehicle, depot, steps}
 
 Step types: depart, transit, pickup, delivery, return, home_depart, arrive_depot.
@@ -11,10 +12,11 @@ Step types: depart, transit, pickup, delivery, return, home_depart, arrive_depot
 import time
 from math import atan2, cos, radians, sin, sqrt
 
+import networkx as nx
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 from .compliance import build_schedule, order_label
-from .graph import build_graph, get_distance, get_duration, get_path, load_cities
+from .graph import build_graph, load_cities, load_geometry
 
 __all__ = ["solve", "compare_algorithms", "MODES"]
 
@@ -45,40 +47,56 @@ STRATEGIES = {
 
 
 class Network:
-    """Road graph plus memoised shortest-path lookups, with a haversine fallback
-    for city pairs the graph cannot connect."""
+    """Road graph plus memoised route lookups, with a haversine fallback for city pairs
+    the graph cannot connect. Every pair of towns has one route, the fastest, as a truck
+    would drive it: its time, its distance and the towns it passes all come from that
+    route, so the plan and the replayed schedule agree. Each origin is searched once
+    (Dijkstra to every node), so a plan over the whole country stays fast."""
 
-    def __init__(self, cities: dict, G=None):
+    def __init__(self, cities: dict, G=None, geometry=None):
         self.cities = cities
         self.G = G if G is not None else build_graph(cities)
-        self._dist, self._dur, self._path = {}, {}, {}
+        # the bundled network has real road shapes; a hand-built graph draws straight lines
+        self.geometry = geometry if geometry is not None else (load_geometry() if G is None else {})
+        self._sources = {}
 
     def coords(self, city):
         return self.cities[city]["coords"]
 
-    def distance(self, a, b):
-        if (a, b) not in self._dist:
+    def segment(self, a, b):
+        """Road shape from a to the adjacent node b, [[lat, lon], ...]; straight if unknown."""
+        if a == b:
+            return [self.coords(a), self.coords(a)]
+        if (a, b) in self.geometry:
+            return list(self.geometry[a, b])
+        if (b, a) in self.geometry:
+            return self.geometry[b, a][::-1]
+        return [self.coords(a), self.coords(b)]
+
+    def _from(self, a):
+        """({node: hours}, {node: km}, {node: path}) of the fastest routes from a."""
+        if a not in self._sources:
             try:
-                self._dist[a, b] = get_distance(self.G, a, b)
-            except Exception:
-                self._dist[a, b] = haversine_km(self.coords(a), self.coords(b))
-        return self._dist[a, b]
+                hours, paths = nx.single_source_dijkstra(self.G, a, weight="duration")
+            except nx.NodeNotFound:
+                hours, paths = {}, {}
+            km = {n: sum(self.G[p][q]["distance"] for p, q in zip(path, path[1:])) for n, path in paths.items()}
+            self._sources[a] = (hours, km, paths)
+        return self._sources[a]
 
     def duration(self, a, b):
-        if (a, b) not in self._dur:
-            try:
-                self._dur[a, b] = get_duration(self.G, a, b)
-            except Exception:
-                self._dur[a, b] = haversine_km(self.coords(a), self.coords(b)) / FALLBACK_SPEED_KMPH
-        return self._dur[a, b]
+        """Driving time in hours along the fastest route."""
+        h = self._from(a)[0].get(b)
+        return h if h is not None else haversine_km(self.coords(a), self.coords(b)) / FALLBACK_SPEED_KMPH
+
+    def distance(self, a, b):
+        """Road distance in km along the fastest route."""
+        km = self._from(a)[1].get(b)
+        return km if km is not None else haversine_km(self.coords(a), self.coords(b))
 
     def path(self, a, b):
-        if (a, b) not in self._path:
-            try:
-                self._path[a, b] = get_path(self.G, a, b)
-            except Exception:
-                self._path[a, b] = [a, b]
-        return self._path[a, b]
+        """Nodes along the fastest route a -> b."""
+        return self._from(a)[2].get(b) or [a, b]
 
 
 _network = None
@@ -105,24 +123,26 @@ def expand_leg(net, a, b, arrival_type, order=None):
     """Steps along the shortest path a -> b, one per road segment. Only the final
     step carries `arrival_type` and the order metadata. Returns (steps, polyline)."""
     seg_path = net.path(a, b) if a != b else [a, b]
-    steps = []
+    steps, polyline = [], [net.coords(seg_path[0])]
     for i in range(1, len(seg_path)):
         prev, city = seg_path[i - 1], seg_path[i]
         same = prev == city
+        shape = net.segment(prev, city)
         steps.append({
             "type": "transit",
             "city": city,
             "coords": net.coords(city),
             "distance_km": 0.0 if same else net.distance(prev, city),
             "duration_h": 0.0 if same else net.duration(prev, city),
+            "geometry": shape,
         })
+        polyline += shape[1:]
     last = steps[-1]
     last["type"] = arrival_type
     if order:
         last["order_id"] = order.get("id")
         last["part"] = order.get("part")
         last["deadline_h"] = order.get("deadline_h")
-    polyline = [net.coords(c) for c in seg_path]
     return steps, polyline
 
 

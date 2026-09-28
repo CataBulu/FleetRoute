@@ -5,6 +5,8 @@ from pathlib import Path
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
+from starlette.middleware import Middleware
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route
@@ -155,5 +157,7 @@ if FRONTEND_DIST.is_dir():
 
 app = Starlette(
     routes=routes,
+    # plans carry the road shapes (a few hundred KB of JSON); gzip cuts that to about a fifth
+    middleware=[Middleware(GZipMiddleware, minimum_size=1024)],
     exception_handlers={PlanningError: planning_error, HTTPException: http_error},
 )

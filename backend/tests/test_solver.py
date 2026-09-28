@@ -116,8 +116,8 @@ class TestRealNetwork:
 
     @pytest.mark.parametrize("deadline, dropped", [(14, 1), (22, 1), (24, 0)])
     def test_deadline_boundary_includes_eu_rests(self, deadline, dropped):
-        # Cluj -> Timisoara 4.75h, 2h loading, Timisoara -> Brasov 6.5h = 13.25h of work,
-        # plus a 45 min break and a 9h daily rest for a single driver = 23h
+        # Cluj -> Timisoara 4.7h, 2h loading, Timisoara -> Brasov 6.9h = 13.6h of work,
+        # plus a 45 min break and a 9h daily rest for a single driver = 23.4h
         order = make_order("Timisoara", "Brasov", 1000, deadline=deadline)
         out = solve("Cluj-Napoca", [order], [self.VEHICLES[0]])
         assert len(out["dropped"]) == dropped
