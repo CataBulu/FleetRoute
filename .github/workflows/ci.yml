@@ -8,10 +8,16 @@ on:
 permissions:
   contents: read
 
+# a newer push to the same branch or pull request replaces the run in progress
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     name: Backend tests (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +35,7 @@ jobs:
   frontend:
     name: Frontend type-check, lint, tests and build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -49,6 +56,7 @@ jobs:
     name: Docker image smoke test
     needs: [backend, frontend]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - run: docker build -t fleetroute .
@@ -61,5 +69,18 @@ jobs:
             | python3 -c 'import json,sys; d=json.load(sys.stdin); d.update(mode="economic", return_to_depot=True, allow_split=False); print(json.dumps(d))' \
             | curl -fs -X POST http://localhost:8000/api/plan -H 'Content-Type: application/json' -d @- \
             | python3 -c 'import json,sys; r=json.load(sys.stdin); k=r["kpis"]; print(k); assert k["orders_delivered"] == k["orders_total"] and not r["schedule"]["late"]'
+      - name: Check the country-wide road network in the container
+        run: |
+          # every town reachable by road can be chosen
+          curl -fs http://localhost:8000/api/cities \
+            | python3 -c 'import json,sys; c=json.load(sys.stdin)["cities"]; print(len(c), "towns"); assert len(c) == 318'
+          # small towns at opposite ends of the country, driven along real roads
+          curl -fs -X POST http://localhost:8000/api/plan -H 'Content-Type: application/json' -d '{"depot": "Abrud",
+            "vehicles": [{"name": "T", "driver": "", "capacity_kg": 20000, "fuel_l100km": 30, "crew": true, "count": 1, "home_city": null}],
+            "orders": [{"pickup": "Mangalia", "delivery": "Sighetu Marmatiei", "demand_kg": 5000, "deadline_h": 96, "earliest_pickup_h": 0, "priority": false}],
+            "mode": "economic", "return_to_depot": true, "allow_split": false}' \
+            | python3 -c 'import json,sys; r=json.load(sys.stdin); k=r["kpis"]; s=[x for x in r["routes"][0]["steps"] if x.get("geometry")]; print(k, len(s), "road steps"); assert k["orders_delivered"] == 1 and not r["schedule"]["late"] and all(len(x["geometry"]) > 2 for x in s)'
+          # plans carry road shapes, so responses are compressed
+          curl -fs -o /dev/null -D - -H 'Accept-Encoding: gzip' http://localhost:8000/api/cities | grep -iq 'content-encoding: gzip'
       - if: failure()
         run: docker logs fleetroute
